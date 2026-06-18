@@ -28,8 +28,8 @@ jobs:
       - name: Build firmware
         run: |
           cd qmk_firmware
-          echo "" > testlist.mk
-          make cocot46lp:default
+          touch testlist.mk
+          make cocot46lp:default SKIP_GIT=yes
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
