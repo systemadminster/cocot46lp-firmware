@@ -30,8 +30,8 @@ jobs:
       - name: Build firmware
         run: |
           cd qmk_firmware
-          sed -i 's/\r//' Makefile
-          make cocot46lp:default
+          sed -n '560,580p' Makefile
+          cat -A Makefile | sed -n '560,580p'
           
       - name: Upload firmware
         uses: actions/upload-artifact@v4
