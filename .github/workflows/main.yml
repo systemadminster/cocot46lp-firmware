@@ -33,8 +33,10 @@ jobs:
           sed -n '560,580p' Makefile
           cat -A Makefile | sed -n '560,580p'
           
-      - name: Upload firmware
-        uses: actions/upload-artifact@v4
+　　　- name: Upload firmware
+      　uses: actions/upload-artifact@v4
         with:
           name: cocot46lp_firmware
-          path: qmk_firmware/cocot46lp_default.hex
+          path: |
+            qmk_firmware/*.hex
+            qmk_firmware/.build/*.hex
