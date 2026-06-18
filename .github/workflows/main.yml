@@ -30,7 +30,7 @@ jobs:
       - name: Build firmware
         run: |
           cd qmk_firmware
-          make cocot46lp:default
+          make -j1 cocot46lp:default VERBOSE=true
           
       - name: Upload firmware
         uses: actions/upload-artifact@v4
