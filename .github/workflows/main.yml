@@ -1,0 +1,39 @@
+name: Build QMK Firmware
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Clone BMP QMK
+        run: |
+          git clone --depth 1 https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
+          cd qmk_firmware
+          git checkout dev/ble_micro_pro
+          
+      - name: Copy keyboard files
+        run: |
+          mkdir -p qmk_firmware/keyboards/cocot46lp/keymaps/default
+          cp keyboard.json qmk_firmware/keyboards/cocot46lp/
+          cp rules.mk qmk_firmware/keyboards/cocot46lp/
+          cp keymap.c qmk_firmware/keyboards/cocot46lp/keymaps/default/
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-avr avr-libc
+          pip3 install qmk
+          
+      - name: Build firmware
+        run: |
+          cd qmk_firmware
+          make cocot46lp:default
+          
+      - name: Upload firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: cocot46lp_firmware
+          path: qmk_firmware/cocot46lp_default.hex
