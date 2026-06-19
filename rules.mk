@@ -1,2 +1,10 @@
+# BLE Micro Pro (nRF52840)
+MCU_FAMILY = NRF52
+MCU_SERIES = NRF52840
+MCU_LDSCRIPT = nrf52840_ao
+PROCESSOR = cortex-m4
+CUSTOM_MATRIX = yes
+
+# AZ1UBALL (pimoroni_trackball driver, I2C)
 POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = pimoroni_trackball
