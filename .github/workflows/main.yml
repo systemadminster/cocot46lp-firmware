@@ -8,21 +8,21 @@ jobs:
 
       - name: Clone BMP QMK
         run: |
-          git clone --depth 1 https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
-          cd qmk_firmware
-          git checkout dev/ble_micro_pro
+          git clone --depth 1 --branch dev/ble_micro_pro \
+            https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
 
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/cocot46lp/keymaps/default
           cp keyboard.json qmk_firmware/keyboards/cocot46lp/
-          cp rules.mk qmk_firmware/keyboards/cocot46lp/
-          cp keymap.c qmk_firmware/keyboards/cocot46lp/keymaps/default/
+          cp config.h      qmk_firmware/keyboards/cocot46lp/
+          cp rules.mk      qmk_firmware/keyboards/cocot46lp/
+          cp keymap.c      qmk_firmware/keyboards/cocot46lp/keymaps/default/
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-avr avr-libc
+          sudo apt-get install -y gcc-arm-none-eabi
           pip3 install qmk
 
       - name: Build firmware
