@@ -1,4 +1,5 @@
 #include QMK_KEYBOARD_H
+#include "tmk_core/protocol/nrf/keycode_str_converter.h"
 
 bool isScrollMode;
 
@@ -62,4 +63,4 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     return mouse_report;
 }
 
-const bmp_ex_keycode_t custom_keys_user[] = {};
+const key_string_map_t custom_keys_user = {0, 0, ""};
