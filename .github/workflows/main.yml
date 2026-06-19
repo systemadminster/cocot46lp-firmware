@@ -20,33 +20,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi
-          cat << 'QMKEOF' | sudo tee /usr/local/bin/qmk > /dev/null
-          #!/bin/bash
-          subcmd="${1:-}"
-          shift
-          output=""
-          while [[ $# -gt 0 ]]; do
-              case "$1" in
-                  -o) output="$2"; shift 2 ;;
-                  *) shift ;;
-              esac
-          done
-          case "$subcmd" in
-              generate-*)
-                  if [[ -n "$output" ]]; then
-                      mkdir -p "$(dirname "$output")"
-                      printf '#pragma once\n' > "$output"
-                  fi
-                  ;;
-          esac
-          exit 0
-          QMKEOF
+          printf '#!/bin/bash\ntrue\n' | sudo tee /usr/local/bin/qmk > /dev/null
           sudo chmod +x /usr/local/bin/qmk
 
       - name: Build firmware
         run: |
           cd qmk_firmware
           touch testlist.mk
+          printf '#pragma once\n#define QMK_VERSION "BMP"\n#define QMK_BUILDDATE "2024-01-01-00:00:00"\n' > quantum/version.h
+          mkdir -p .build/obj_ble_micro_pro/src
+          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/info_config.h
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
 
       - name: Upload firmware
