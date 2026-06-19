@@ -11,13 +11,15 @@ jobs:
           git clone --depth 1 --branch dev/ble_micro_pro \
             https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
 
-      - name: Copy keyboard files
-        run: |
+          - name: Copy keyboard files
+          run: |
           mkdir -p qmk_firmware/keyboards/cocot46lp/keymaps/default
-          cp keyboard.json qmk_firmware/keyboards/cocot46lp/
-          cp config.h      qmk_firmware/keyboards/cocot46lp/
-          cp rules.mk      qmk_firmware/keyboards/cocot46lp/
-          cp keymap.c      qmk_firmware/keyboards/cocot46lp/keymaps/default/
+          cp keyboard.json   qmk_firmware/keyboards/cocot46lp/
+          cp config.h        qmk_firmware/keyboards/cocot46lp/
+          cp cocot46lp.h     qmk_firmware/keyboards/cocot46lp/
+          cp cocot46lp.c     qmk_firmware/keyboards/cocot46lp/
+          cp rules.mk        qmk_firmware/keyboards/cocot46lp/
+          cp keymap.c        qmk_firmware/keyboards/cocot46lp/keymaps/default/
 
       - name: Install dependencies
         run: |
