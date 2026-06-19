@@ -25,7 +25,14 @@ jobs:
       - name: Build firmware
         run: |
           cd qmk_firmware
+          echo "=== Makefile line count ==="
+          wc -l Makefile
+          echo "=== Lines 560-575 of Makefile ==="
+          sed -n '560,575p' Makefile
+          echo "=== Test: build ble_micro_pro:default ==="
           touch testlist.mk
+          make ble_micro_pro:default SKIP_GIT=yes || true
+          echo "=== Test: build ble_micro_pro:cocot46lp ==="
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
 
       - name: Upload firmware
