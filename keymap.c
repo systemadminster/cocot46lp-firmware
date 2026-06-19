@@ -1,6 +1,5 @@
 #include QMK_KEYBOARD_H
 
-// cocot46lp: 4 rows x 7 cols
 #undef LAYOUT
 #define LAYOUT( \
     k00, k01, k02, k03, k04, k05, k06, \
@@ -16,8 +15,8 @@
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
-        KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    MS_BTN1, MS_BTN2,
-        KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    MS_BTN3, KC_NO,
+        KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_BTN1, KC_BTN2,
+        KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_BTN3, KC_NO,
         KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_NO,   KC_NO,
         KC_LCTL, KC_LGUI, KC_LALT, KC_SPC,  MO(1),   KC_NO,   KC_NO
     ),
