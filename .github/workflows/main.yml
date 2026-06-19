@@ -30,6 +30,9 @@ jobs:
           printf '#pragma once\n#define QMK_VERSION "BMP"\n#define QMK_BUILDDATE "2024-01-01-00:00:00"\n' > quantum/version.h
           mkdir -p .build/obj_ble_micro_pro/src
           printf '#pragma once\n' > .build/obj_ble_micro_pro/src/info_config.h
+          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/layouts.h
+          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/ble_micro_pro.h
+          printf '' > .build/obj_ble_micro_pro/src/ble_micro_pro.c
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
 
       - name: Upload firmware
