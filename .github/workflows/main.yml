@@ -11,13 +11,10 @@ jobs:
 
       - name: Copy keyboard files
         run: |
-          mkdir -p qmk_firmware/keyboards/cocot46lp/keymaps/default
-          cp keyboard.json  qmk_firmware/keyboards/cocot46lp/
-          cp config.h       qmk_firmware/keyboards/cocot46lp/
-          cp cocot46lp.h    qmk_firmware/keyboards/cocot46lp/
-          cp cocot46lp.c    qmk_firmware/keyboards/cocot46lp/
-          cp rules.mk       qmk_firmware/keyboards/cocot46lp/
-          cp keymap.c       qmk_firmware/keyboards/cocot46lp/keymaps/default/
+          mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
+          cp config.h qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
+          cp rules.mk qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
+          cp keymap.c qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
 
       - name: Install dependencies
         run: |
@@ -29,7 +26,7 @@ jobs:
         run: |
           cd qmk_firmware
           touch testlist.mk
-          make cocot46lp:default SKIP_GIT=yes
+          make ble_micro_pro:cocot46lp SKIP_GIT=yes
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
