@@ -2,20 +2,14 @@
     "manufacturer": "aki27",
     "keyboard_name": "cocot46lp",
     "maintainer": "systemadminster",
-    "development_board": "promicro",
     "diode_direction": "COL2ROW",
     "features": {
         "bootmagic": true,
         "extrakey": true,
         "mousekey": true,
-        "nkro": true,
+        "nkro": false,
         "pointing_device": true
     },
-    "matrix_pins": {
-        "cols": ["B3", "B2", "B6", "B4", "E6", "D7", "C6"],
-        "rows": ["D0", "D1", "D2", "D3"]
-    },
-    
     "url": "",
     "usb": {
         "device_version": "1.0.0",
