@@ -34,9 +34,14 @@ jobs:
           printf '#pragma once\n' > .build/obj_ble_micro_pro/src/ble_micro_pro.h
           printf '' > .build/obj_ble_micro_pro/src/ble_micro_pro.c
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
+          echo "--- Build output files ---"
+          ls -la .build/
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: cocot46lp_firmware
-          path: qmk_firmware/.build/*.hex
+          path: |
+            qmk_firmware/.build/*.hex
+            qmk_firmware/.build/*.bin
+            qmk_firmware/.build/*.elf
