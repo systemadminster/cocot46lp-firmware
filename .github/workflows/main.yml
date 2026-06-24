@@ -5,42 +5,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Clone BMP QMK
         run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
-
+      - name: Show cocot46 keyboard info
+        run: |
+          ls qmk_firmware/keyboards/cocot46/ || echo "cocot46 not found"
+          grep -n "LAYOUT" qmk_firmware/keyboards/cocot46/*.h 2>/dev/null || true
       - name: Copy keyboard files
         run: |
-          mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
-          cp config.h qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
-          cp rules.mk qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
-          cp keymap.c qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
-
+          mkdir -p qmk_firmware/keyboards/cocot46/keymaps/cocot46lp
+          cp config.h qmk_firmware/keyboards/cocot46/keymaps/cocot46lp/
+          cp rules.mk qmk_firmware/keyboards/cocot46/keymaps/cocot46lp/
+          cp keymap.c qmk_firmware/keyboards/cocot46/keymaps/cocot46lp/
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi
           printf '#!/bin/bash\ntrue\n' | sudo tee /usr/local/bin/qmk > /dev/null
           sudo chmod +x /usr/local/bin/qmk
-
       - name: Build firmware
         run: |
           cd qmk_firmware
           touch testlist.mk
           printf '#pragma once\n#define QMK_VERSION "BMP"\n#define QMK_BUILDDATE "2024-01-01-00:00:00"\n' > quantum/version.h
-          mkdir -p .build/obj_ble_micro_pro/src
-          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/info_config.h
-          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/layouts.h
-          printf '#pragma once\n' > .build/obj_ble_micro_pro/src/ble_micro_pro.h
-          printf '' > .build/obj_ble_micro_pro/src/ble_micro_pro.c
-          make ble_micro_pro:cocot46lp SKIP_GIT=yes
+          mkdir -p .build/obj_cocot46_cocot46lp/src
+          printf '#pragma once\n' > .build/obj_cocot46_cocot46lp/src/info_config.h
+          printf '#pragma once\n' > .build/obj_cocot46_cocot46lp/src/layouts.h
+          printf '#pragma once\n' > .build/obj_cocot46_cocot46lp/src/cocot46.h
+          printf '' > .build/obj_cocot46_cocot46lp/src/cocot46.c
+          make cocot46:cocot46lp SKIP_GIT=yes
           echo "--- Build output files ---"
           ls -la .build/
-
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: cocot46lp_firmware
           path: |
-            qmk_firmware/.build/ble_micro_pro_cocot46lp.hex
-            qmk_firmware/.build/ble_micro_pro_cocot46lp.elf
+            qmk_firmware/.build/cocot46_cocot46lp.hex
+            qmk_firmware/.build/cocot46_cocot46lp.elf
