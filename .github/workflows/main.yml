@@ -7,10 +7,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Clone BMP QMK
         run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
-      - name: Show cocot46 keyboard info
+      - name: Find cocot46 keyboard definition
         run: |
-          ls qmk_firmware/keyboards/cocot46/ || echo "cocot46 not found"
-          grep -n "LAYOUT" qmk_firmware/keyboards/cocot46/*.h 2>/dev/null || true
+          git clone --depth 1 https://github.com/qmk/qmk_firmware.git /tmp/qmk_main 2>/dev/null || true
+          if [ -d "/tmp/qmk_main/keyboards/cocot46" ]; then
+            echo "Found cocot46 in QMK main!"
+            cp -r /tmp/qmk_main/keyboards/cocot46 qmk_firmware/keyboards/
+            ls qmk_firmware/keyboards/cocot46/
+            cat qmk_firmware/keyboards/cocot46/config.h || true
+            grep -n "LAYOUT" qmk_firmware/keyboards/cocot46/*.h 2>/dev/null || true
+          else
+            echo "cocot46 not in QMK main"
+            ls /tmp/qmk_main/keyboards/ | grep -i cocot || echo "no cocot in main"
+          fi
+          git clone --depth 1 https://github.com/aki27sota/cocot46lp.git /tmp/aki27 2>/dev/null || \
+          git clone --depth 1 https://github.com/aki27sota/qmk_firmware.git /tmp/aki27_qmk 2>/dev/null || true
+          ls /tmp/aki27 2>/dev/null || ls /tmp/aki27_qmk 2>/dev/null || echo "aki27 repo not found"
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/cocot46/keymaps/cocot46lp
@@ -33,9 +45,9 @@ jobs:
           printf '#pragma once\n' > .build/obj_cocot46_cocot46lp/src/layouts.h
           printf '#pragma once\n' > .build/obj_cocot46_cocot46lp/src/cocot46.h
           printf '' > .build/obj_cocot46_cocot46lp/src/cocot46.c
-          make cocot46:cocot46lp SKIP_GIT=yes
+          make cocot46:cocot46lp SKIP_GIT=yes 2>&1 | tail -50
           echo "--- Build output files ---"
-          ls -la .build/
+          ls -la .build/ 2>/dev/null || echo "No build output"
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
