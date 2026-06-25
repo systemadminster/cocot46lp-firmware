@@ -9,7 +9,7 @@ jobs:
         run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
       - name: Find cocot46 source
         run: |
-          git clone --depth 1 --branch gh-pages https://github.com/sekigon-gonnoc/BLE-Micro-Pro.git /tmp/bmp_docs 2>/dev/null
+          git clone --depth 1 https://github.com/sekigon-gonnoc/BLE-Micro-Pro.git /tmp/bmp_docs 2>/dev/null
           echo "=== define_new_keyboard.md ==="
           cat /tmp/bmp_docs/AboutDefaultFirmware/doc/define_new_keyboard.md
           echo "=== design_guide.md ==="
