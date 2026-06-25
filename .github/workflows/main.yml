@@ -9,11 +9,9 @@ jobs:
         run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
       - name: Find cocot46 source
         run: |
-          git clone --depth 1 https://github.com/sekigon-gonnoc/BLE-Micro-Pro.git /tmp/bmp_repo 2>/dev/null
-          echo "=== define_new_keyboard.md ==="
-          cat /tmp/bmp_repo/AboutDefaultFirmware/doc/define_new_keyboard.md
-          echo "=== build_bmp_qmk_firmware.md ==="
-          cat /tmp/bmp_repo/AboutDefaultFirmware/doc/build_bmp_qmk_firmware.md
+          curl -sL "https://sekigon-gonnoc.github.io/BLE-Micro-Pro/" | grep -o 'href="[^"]*"' | head -30
+          curl -sL "https://sekigon-gonnoc.github.io/BLE-Micro-Pro/sitemap.xml" 2>/dev/null | grep -o '<loc>[^<]*</loc>' | head -30 || true
+          curl -sL "https://raw.githubusercontent.com/sekigon-gonnoc/BLE-Micro-Pro/master/AboutDefaultFirmware/doc/define_new_keyboard.md"
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
