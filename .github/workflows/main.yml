@@ -7,14 +7,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Clone BMP QMK
         run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
-      - name: Find cocot46 in BLE-Micro-Pro repo
+      - name: Find cocot46 source
         run: |
           git clone --depth 1 https://github.com/sekigon-gonnoc/BLE-Micro-Pro.git /tmp/bmp_repo 2>/dev/null
-          echo "=== AboutDefaultFirmware ==="
-          ls /tmp/bmp_repo/AboutDefaultFirmware/ 2>/dev/null || echo "Not found"
-          cat /tmp/bmp_repo/AboutDefaultFirmware/README.md 2>/dev/null | grep -i cocot | head -20 || true
-          find /tmp/bmp_repo -name "*.md" | xargs grep -l -i "cocot46" 2>/dev/null | head -5
-          find /tmp/bmp_repo -name "*.md" -exec grep -l -i "cocot46" {} \; 2>/dev/null | while read f; do echo "=== $f ==="; grep -i "cocot46" "$f"; done
+          echo "=== README full ==="
+          cat /tmp/bmp_repo/AboutDefaultFirmware/README.md
+          echo "=== doc contents ==="
+          find /tmp/bmp_repo/AboutDefaultFirmware/doc -type f | head -30
+          find /tmp/bmp_repo/AboutDefaultFirmware/doc -name "*cocot*" 2>/dev/null
+          find /tmp/bmp_repo -name "*.json" | xargs grep -l "cocot46" 2>/dev/null | head -5
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
@@ -38,6 +39,7 @@ jobs:
           printf '#pragma once\n' > .build/obj_ble_micro_pro/src/ble_micro_pro.h
           printf '' > .build/obj_ble_micro_pro/src/ble_micro_pro.c
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
+          echo "--- Build output files ---"
           ls -la .build/
       - name: Upload firmware
         uses: actions/upload-artifact@v4
