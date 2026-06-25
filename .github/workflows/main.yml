@@ -10,12 +10,10 @@ jobs:
       - name: Find cocot46 source
         run: |
           git clone --depth 1 https://github.com/sekigon-gonnoc/BLE-Micro-Pro.git /tmp/bmp_repo 2>/dev/null
-          echo "=== README full ==="
-          cat /tmp/bmp_repo/AboutDefaultFirmware/README.md
-          echo "=== doc contents ==="
-          find /tmp/bmp_repo/AboutDefaultFirmware/doc -type f | head -30
-          find /tmp/bmp_repo/AboutDefaultFirmware/doc -name "*cocot*" 2>/dev/null
-          find /tmp/bmp_repo -name "*.json" | xargs grep -l "cocot46" 2>/dev/null | head -5
+          echo "=== define_new_keyboard.md ==="
+          cat /tmp/bmp_repo/AboutDefaultFirmware/doc/define_new_keyboard.md
+          echo "=== build_bmp_qmk_firmware.md ==="
+          cat /tmp/bmp_repo/AboutDefaultFirmware/doc/build_bmp_qmk_firmware.md
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
