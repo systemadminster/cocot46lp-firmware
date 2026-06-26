@@ -150,11 +150,8 @@ void pointing_device_task(void) {
 
     int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, reg, data, 5, 100);
     if (result == 0) {
-        // data: [left, right, up, down, switch]
-        int8_t dx = (int8_t)data[1] - (int8_t)data[0];
-        int8_t dy = (int8_t)data[3] - (int8_t)data[2];
-        // DIAGNOSTIC: rep.x shows total motion count+1 so even zero motion drifts cursor
-        // right slowly; actual motion makes it drift faster
+        // DIAGNOSTIC: rep.x = sum of motion bytes + 1
+        // zero motion → constant slow drift; actual motion → faster drift
         rep.x = (int8_t)(data[0] + data[1] + data[2] + data[3]) + 1;
         if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
     } else {
