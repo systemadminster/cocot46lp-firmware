@@ -153,16 +153,18 @@ void pointing_device_task(void) {
 
     az1uball_i2c_init();  // claim GPIO 18/16 as I2C
 
-    uint8_t data[5] = {0};
+    uint8_t data[9] = {0};
     report_mouse_t rep = pointing_device_get_report();
-    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, AZ1UBALL_REG_LEFT, data, 5, 100);
+    // Read from reg 0x00: chip_id(0x49?), version, ..., left, right, up, down, switch
+    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, 0x00, data, 9, 100);
 
     az1uball_i2c_release();  // release GPIO 18/16 back to matrix
 
     if (result == 0) {
-        // DIAGNOSTIC: rep.x = sum of motion bytes + 1
-        rep.x = (int8_t)(data[0] + data[1] + data[2] + data[3]) + 1;
-        if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
+        // DIAGNOSTIC: rep.x = chip_id (data[0])
+        // If AZ1UBALL responds correctly: data[0]=0x49 → rep.x=0x49=73 (fast right drift)
+        // Motion is in data[4..7]: left, right, up, down
+        rep.x = (int8_t)data[0] + 1;
     } else {
         rep.x = 2;
     }
