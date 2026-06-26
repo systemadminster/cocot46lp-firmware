@@ -117,54 +117,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// AZ1UBALL via BMPAPI I2C — old QMK (dev/ble_micro_pro) API
-// pointing_device_task() is weak in quantum/pointing_device.c — override it here.
-#include "pointing_device.h"
-
-#define AZ1UBALL_ADDR     0x0A
-#define AZ1UBALL_REG_LEFT 0x04
-
-static inline void az1uball_i2c_reinit(void) {
-    const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
-    BMPAPI->i2cm.init(&cfg);
-}
-
-void pointing_device_init(void) {
-    // Init I2C once at startup only — do NOT reinit during operation
-    // (GPIO 18/16 are shared with col_pins; reinit during scan causes key ghosting)
-    az1uball_i2c_reinit();
-}
-
-void pointing_device_task(void) {
-    static uint16_t last_read = 0;
-    if (timer_elapsed(last_read) < 20) {
-        pointing_device_send();
-        return;
-    }
-    last_read = timer_read();
-
-    uint8_t reg     = AZ1UBALL_REG_LEFT;
-    uint8_t data[5] = {0};
-
-    report_mouse_t rep = pointing_device_get_report();
-
-    if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
-        BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
-        int8_t dx = (int8_t)data[1] - (int8_t)data[0];
-        int8_t dy = (int8_t)data[3] - (int8_t)data[2];
-
-        if (layer_state_is(_LOWER)) {
-            rep.h = dx;
-            rep.v = -dy;
-        } else {
-            rep.x = dx;
-            rep.y = dy;
-        }
-        if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
-    }
-
-    pointing_device_set_report(rep);
-    pointing_device_send();
-}
+// AZ1UBALL: I2C disabled — GPIO 18/16 conflict with col_pins[2,4]
+// To enable: rewire AZ1UBALL SDA→GPIO5, SCL→GPIO6 (BMP default I2C, not in matrix)
 
 const key_string_map_t custom_keys_user = {0, 0, ""};
