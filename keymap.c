@@ -117,9 +117,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// AZ1UBALL direct I2C driver via BMPAPI
-// Reads in pointing_device_task_user (guaranteed by both old and new QMK pointing device framework).
-// Uses transmit+receive (most basic BMP I2C ops) instead of read_reg.
+// AZ1UBALL via BMPAPI I2C — old QMK (dev/ble_micro_pro) API
+// pointing_device_task() is weak in quantum/pointing_device.c — override it here.
+#include "pointing_device.h"
+
 #define AZ1UBALL_ADDR     0x0A
 #define AZ1UBALL_REG_LEFT 0x04
 
@@ -128,15 +129,13 @@ static inline void az1uball_i2c_reinit(void) {
     BMPAPI->i2cm.init(&cfg);
 }
 
-// Required stubs for POINTING_DEVICE_DRIVER = custom
-void     pointing_device_driver_init(void)                                    { az1uball_i2c_reinit(); }
-uint16_t pointing_device_driver_get_cpi(void)                                 { return 400; }
-void     pointing_device_driver_set_cpi(uint16_t cpi)                         {}
-
-// DIAGNOSTIC: force x=1 to verify pointing_device_driver_get_report is called
-report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
-    mouse_report.x = 1;
-    return mouse_report;
+// DIAGNOSTIC: override weak pointing_device_task, force x=1
+// If cursor drifts right after flashing → framework is now active
+void pointing_device_task(void) {
+    report_mouse_t rep = pointing_device_get_report();
+    rep.x = 1;
+    pointing_device_set_report(rep);
+    pointing_device_send();
 }
 
 const key_string_map_t custom_keys_user = {0, 0, ""};
