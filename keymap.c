@@ -145,8 +145,9 @@ void pointing_device_task(void) {
     uint8_t data[5] = {0};
     report_mouse_t rep = pointing_device_get_report();
 
-    if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
-        BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
+    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, reg, data, 5, 100);
+    if (result == 0) {
+        // I2C success: normal trackball operation
         int8_t dx = (int8_t)data[1] - (int8_t)data[0];
         int8_t dy = (int8_t)data[3] - (int8_t)data[2];
         if (layer_state_is(_LOWER)) {
@@ -157,6 +158,9 @@ void pointing_device_task(void) {
             rep.y = dy;
         }
         if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
+    } else {
+        // DIAGNOSTIC: I2C failed — cursor drifts right so we can see it
+        rep.x = 1;
     }
 
     pointing_device_set_report(rep);
