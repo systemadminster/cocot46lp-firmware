@@ -38,15 +38,14 @@ jobs:
           cp rules.mk qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
           cp keymap.c qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
 
-      - name: Debug pointing device source
+      - name: Debug i2c source
         run: |
-          echo "=== pointing_device files ==="
-          find qmk_firmware -name "pointing_device*" -type f 2>/dev/null
-          echo "=== quantum/pointing_device.c (if exists) ==="
-          cat qmk_firmware/quantum/pointing_device.c 2>/dev/null || echo "not found"
-          echo "=== searching for pointing_device_task ==="
-          grep -r "pointing_device_task\b" qmk_firmware/quantum/ --include="*.c" -l 2>/dev/null || echo "none"
-          grep -r "pointing_device_task\b" qmk_firmware/tmk_core/ --include="*.c" -l 2>/dev/null || echo "none in tmk_core"
+          echo "=== BMP i2c source files ==="
+          find qmk_firmware/tmk_core/protocol/nrf -name "i2c*" -type f 2>/dev/null
+          echo "=== i2c.c content ==="
+          cat qmk_firmware/tmk_core/protocol/nrf/i2c.c 2>/dev/null || echo "not found"
+          echo "=== searching TWIM instance ==="
+          grep -r "TWIM\|twim\|NRF_DRV_TWI\|nrfx_twim" qmk_firmware/tmk_core/protocol/nrf/ 2>/dev/null | head -40
 
       - name: Build firmware
         run: |
