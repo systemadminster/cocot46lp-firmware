@@ -117,54 +117,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// AZ1UBALL via BMPAPI I2C
-// GPIO 18 (SDA) and GPIO 16 (SCL) overlap with matrix col pins.
-// TWIM must be released after each read so the matrix scanner can use those GPIOs.
+// AZ1UBALL: BMPAPI i2cm does not perform real I2C transactions (always returns 0).
+// Trackball support requires ZMK + nice!nano with kzyz/zmk-az1uball-driver.
+// Pointing device left enabled to register as mouse HID (required for BLE Micro Pro).
 #include "pointing_device.h"
 
-#define AZ1UBALL_ADDR     0x0A
-#define AZ1UBALL_REG_LEFT 0x04
-
-// nRF52840: TWIM0 base=0x40003000, ENABLE register offset=0x500
-// Writing 0 disables TWIM0, releasing GPIO 18/16 back to normal GPIO
-#define NRF_TWIM0_ENABLE_REG (*((volatile uint32_t *)(0x40003000 + 0x500)))
-
-static inline void az1uball_i2c_init(void) {
-    const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
-    BMPAPI->i2cm.init(&cfg);
-}
-
-static inline void az1uball_i2c_release(void) {
-    NRF_TWIM0_ENABLE_REG = 0;
-}
-
-void pointing_device_init(void) {
-    az1uball_i2c_init();
-    // No release — TWIM holds GPIO 18/16 (phantom keys will appear, this is a diagnostic build)
-}
+void pointing_device_init(void) {}
 
 void pointing_device_task(void) {
-    static uint16_t last_read = 0;
-    if (timer_elapsed(last_read) < 20) {
-        pointing_device_send();
-        return;
-    }
-    last_read = timer_read();
-
-    // No re-init, no release — raw read with always-active TWIM
-    uint8_t data[9] = {0};
-    report_mouse_t rep = pointing_device_get_report();
-    int8_t result = BMPAPI->i2cm.read_reg(0x7F, 0x00, data, 9, 100);  // invalid addr test
-
-    if (result == 0) {
-        // data[0] = chip ID (0x49 if pimoroni-compatible)
-        // data[4..7] = left, right, up, down motion
-        rep.x = (int8_t)data[0] + 1;
-    } else {
-        rep.x = 2;
-    }
-
-    pointing_device_set_report(rep);
     pointing_device_send();
 }
 
