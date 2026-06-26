@@ -121,10 +121,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // GPIO 18 (SDA) and GPIO 16 (SCL) overlap with matrix col pins.
 // TWIM must be released after each read so the matrix scanner can use those GPIOs.
 #include "pointing_device.h"
-#include "nrf.h"
 
 #define AZ1UBALL_ADDR     0x0A
 #define AZ1UBALL_REG_LEFT 0x04
+
+// nRF52840: TWIM0 base=0x40003000, ENABLE register offset=0x500
+// Writing 0 disables TWIM0, releasing GPIO 18/16 back to normal GPIO
+#define NRF_TWIM0_ENABLE_REG (*((volatile uint32_t *)(0x40003000 + 0x500)))
 
 static inline void az1uball_i2c_init(void) {
     const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
@@ -132,8 +135,7 @@ static inline void az1uball_i2c_init(void) {
 }
 
 static inline void az1uball_i2c_release(void) {
-    // Disable TWIM0 so GPIO 18/16 return to normal GPIO for matrix scanning
-    NRF_TWIM0->ENABLE = 0;
+    NRF_TWIM0_ENABLE_REG = 0;
 }
 
 void pointing_device_init(void) {
