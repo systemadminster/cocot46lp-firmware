@@ -117,23 +117,30 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// AZ1UBALL via BMPAPI I2C (old QMK dev/ble_micro_pro API)
-// PIN5(P0.18)=SDA, PIN6(P0.16)=SCL — dedicated I2C pads with level shifter, no matrix conflict
+// AZ1UBALL via BMPAPI I2C
+// GPIO 18 (SDA) and GPIO 16 (SCL) overlap with matrix col pins.
+// TWIM must be released after each read so the matrix scanner can use those GPIOs.
 #include "pointing_device.h"
+#include "nrf.h"
 
 #define AZ1UBALL_ADDR     0x0A
 #define AZ1UBALL_REG_LEFT 0x04
 
-static inline void az1uball_i2c_reinit(void) {
+static inline void az1uball_i2c_init(void) {
     const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
     BMPAPI->i2cm.init(&cfg);
 }
 
+static inline void az1uball_i2c_release(void) {
+    // Disable TWIM0 so GPIO 18/16 return to normal GPIO for matrix scanning
+    NRF_TWIM0->ENABLE = 0;
+}
+
 void pointing_device_init(void) {
-    az1uball_i2c_reinit();
-    // AZ1UBALL: send 2-byte acceleration mode command
+    az1uball_i2c_init();
     uint8_t init_data[2] = {0x91, 0x00};
     BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, init_data, 2);
+    az1uball_i2c_release();
 }
 
 void pointing_device_task(void) {
@@ -144,18 +151,20 @@ void pointing_device_task(void) {
     }
     last_read = timer_read();
 
-    uint8_t reg     = AZ1UBALL_REG_LEFT;
+    az1uball_i2c_init();  // claim GPIO 18/16 as I2C
+
     uint8_t data[5] = {0};
     report_mouse_t rep = pointing_device_get_report();
+    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, AZ1UBALL_REG_LEFT, data, 5, 100);
 
-    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, reg, data, 5, 100);
+    az1uball_i2c_release();  // release GPIO 18/16 back to matrix
+
     if (result == 0) {
         // DIAGNOSTIC: rep.x = sum of motion bytes + 1
-        // zero motion → constant slow drift; actual motion → faster drift
         rep.x = (int8_t)(data[0] + data[1] + data[2] + data[3]) + 1;
         if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
     } else {
-        rep.x = 2;  // I2C failed: drifts right at 2/read
+        rep.x = 2;
     }
 
     pointing_device_set_report(rep);
