@@ -129,11 +129,31 @@ static inline void az1uball_i2c_reinit(void) {
     BMPAPI->i2cm.init(&cfg);
 }
 
-// DIAGNOSTIC: override weak pointing_device_task, force x=1
-// If cursor drifts right after flashing → framework is now active
 void pointing_device_task(void) {
+    // Reinit I2C every call: GPIO 18/16 shared with col_pins, reconfigured by matrix scan
+    az1uball_i2c_reinit();
+
+    uint8_t reg     = AZ1UBALL_REG_LEFT;
+    uint8_t data[5] = {0};
+
     report_mouse_t rep = pointing_device_get_report();
-    rep.x = 1;
+
+    if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
+        BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
+        // data: [left, right, up, down, switch]
+        int8_t dx = (int8_t)data[1] - (int8_t)data[0];
+        int8_t dy = (int8_t)data[3] - (int8_t)data[2];
+
+        if (layer_state_is(_LOWER)) {
+            rep.h = dx;
+            rep.v = -dy;
+        } else {
+            rep.x = dx;
+            rep.y = dy;
+        }
+        if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
+    }
+
     pointing_device_set_report(rep);
     pointing_device_send();
 }
