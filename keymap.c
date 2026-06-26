@@ -129,7 +129,7 @@ static inline void az1uball_i2c_reinit(void) {
     BMPAPI->i2cm.init(&cfg);
 }
 
-void keyboard_post_init_user(void) {
+void pointing_device_init(void) {
     // Init I2C once at startup only — do NOT reinit during operation
     // (GPIO 18/16 are shared with col_pins; reinit during scan causes key ghosting)
     az1uball_i2c_reinit();
