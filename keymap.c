@@ -134,12 +134,13 @@ uint16_t pointing_device_driver_get_cpi(void)                                 { 
 void     pointing_device_driver_set_cpi(uint16_t cpi)                         {}
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) { return mouse_report; }
 
-report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-    // DIAGNOSTIC: force X=1 to verify pointing device framework is active
-    // If mouse cursor drifts right → pointing device works, I2C is the issue
-    // If cursor doesn't move at all → pointing device framework not active
+// DIAGNOSTIC: use matrix_scan_user + pointing_device_set_report/send
+// (old QMK API, bypasses pointing_device_task_user which may not be called)
+void matrix_scan_user(void) {
+    report_mouse_t mouse_report = pointing_device_get_report();
     mouse_report.x = 1;
-    return mouse_report;
+    pointing_device_set_report(mouse_report);
+    pointing_device_send();
 }
 
 const key_string_map_t custom_keys_user = {0, 0, ""};
