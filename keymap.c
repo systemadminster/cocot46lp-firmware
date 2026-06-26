@@ -135,26 +135,10 @@ void     pointing_device_driver_set_cpi(uint16_t cpi)                         {}
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) { return mouse_report; }
 
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-    // Reinit I2C: pins 18/16 shared with col_pins, reconfigured each matrix scan
-    az1uball_i2c_reinit();
-
-    // I2C register read via transmit (write reg addr) + receive (read data)
-    uint8_t reg  = AZ1UBALL_REG_LEFT;
-    uint8_t data[5] = {0};
-    if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
-        BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
-        // data: [left, right, up, down, switch]
-        mouse_report.x = (int8_t)data[1] - (int8_t)data[0];
-        mouse_report.y = (int8_t)data[3] - (int8_t)data[2];
-        if (data[4] & 0x80) mouse_report.buttons |= MOUSE_BTN1;
-    }
-
-    if (layer_state_is(_LOWER)) {
-        mouse_report.h = mouse_report.x;
-        mouse_report.v = -mouse_report.y;
-        mouse_report.x = 0;
-        mouse_report.y = 0;
-    }
+    // DIAGNOSTIC: force X=1 to verify pointing device framework is active
+    // If mouse cursor drifts right → pointing device works, I2C is the issue
+    // If cursor doesn't move at all → pointing device framework not active
+    mouse_report.x = 1;
     return mouse_report;
 }
 
