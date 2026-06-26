@@ -117,38 +117,39 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// AZ1UBALL (pimoroni-compatible) custom pointing device driver
-// Uses BMPAPI->i2cm directly to avoid i2c_read_register vs i2c_readReg mismatch.
-#define AZ1UBALL_ADDR      0x0A
-#define AZ1UBALL_REG_LEFT  0x04
+// AZ1UBALL direct I2C driver via BMPAPI
+// Reads in pointing_device_task_user (guaranteed by both old and new QMK pointing device framework).
+// Uses transmit+receive (most basic BMP I2C ops) instead of read_reg.
+#define AZ1UBALL_ADDR     0x0A
+#define AZ1UBALL_REG_LEFT 0x04
 
-static inline void az1uball_i2c_init(void) {
+static inline void az1uball_i2c_reinit(void) {
     const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
     BMPAPI->i2cm.init(&cfg);
 }
 
-void pointing_device_driver_init(void) {
-    az1uball_i2c_init();
-}
+// Required stubs for POINTING_DEVICE_DRIVER = custom
+void     pointing_device_driver_init(void)                                    { az1uball_i2c_reinit(); }
+uint16_t pointing_device_driver_get_cpi(void)                                 { return 400; }
+void     pointing_device_driver_set_cpi(uint16_t cpi)                         {}
+report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) { return mouse_report; }
 
-report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+    // Reinit I2C: pins 18/16 shared with col_pins, reconfigured each matrix scan
+    az1uball_i2c_reinit();
+
+    // I2C register read via transmit (write reg addr) + receive (read data)
+    uint8_t reg  = AZ1UBALL_REG_LEFT;
     uint8_t data[5] = {0};
-    az1uball_i2c_init();  // reinit each read: pins 18/16 shared with col_pins
-    if (BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, AZ1UBALL_REG_LEFT, data, 5, 100) == 0) {
-        // data: [left, right, up, down, click]
+    if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
+        BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
+        // data: [left, right, up, down, switch]
         mouse_report.x = (int8_t)data[1] - (int8_t)data[0];
         mouse_report.y = (int8_t)data[3] - (int8_t)data[2];
         if (data[4] & 0x80) mouse_report.buttons |= MOUSE_BTN1;
     }
-    return mouse_report;
-}
 
-uint16_t pointing_device_driver_get_cpi(void) { return 400; }
-void     pointing_device_driver_set_cpi(uint16_t cpi) {}
-
-report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-    isScrollMode = layer_state_is(_LOWER);
-    if (isScrollMode) {
+    if (layer_state_is(_LOWER)) {
         mouse_report.h = mouse_report.x;
         mouse_report.v = -mouse_report.y;
         mouse_report.x = 0;
