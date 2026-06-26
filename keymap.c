@@ -57,12 +57,6 @@ static uint32_t cocot46_scan(matrix_row_t *matrix_raw) {
         matrix_raw[r] = (matrix_raw[r] & col_mask) | ((cocot46_r2c_buf[r] & col_mask) << device_cols);
     }
 
-    // Pins 18 (SDA) and 16 (SCL) are shared with col_pins.
-    // Reinitialize I2C after each matrix scan so the AZ1UBALL can be read
-    // in the pointing_device_task that runs between scans.
-    const bmp_api_i2cm_config_t i2c_cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
-    BMPAPI->i2cm.init(&i2c_cfg);
-
     return change;
 }
 
@@ -122,6 +116,35 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,   KC_NO,  KC_NO,  KC_NO,  KC_NO,  KC_NO,   KC_NO,   KC_NO,  KC_NO,  KC_NO,   KC_NO
     )
 };
+
+// AZ1UBALL (pimoroni-compatible) custom pointing device driver
+// Uses BMPAPI->i2cm directly to avoid i2c_read_register vs i2c_readReg mismatch.
+#define AZ1UBALL_ADDR      0x0A
+#define AZ1UBALL_REG_LEFT  0x04
+
+static inline void az1uball_i2c_init(void) {
+    const bmp_api_i2cm_config_t cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
+    BMPAPI->i2cm.init(&cfg);
+}
+
+void pointing_device_driver_init(void) {
+    az1uball_i2c_init();
+}
+
+report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
+    uint8_t data[5] = {0};
+    az1uball_i2c_init();  // reinit each read: pins 18/16 shared with col_pins
+    if (BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, AZ1UBALL_REG_LEFT, data, 5, 100) == 0) {
+        // data: [left, right, up, down, click]
+        mouse_report.x = (int8_t)data[1] - (int8_t)data[0];
+        mouse_report.y = (int8_t)data[3] - (int8_t)data[2];
+        if (data[4] & 0x80) mouse_report.buttons |= MOUSE_BTN1;
+    }
+    return mouse_report;
+}
+
+uint16_t pointing_device_driver_get_cpi(void) { return 400; }
+void     pointing_device_driver_set_cpi(uint16_t cpi) {}
 
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     isScrollMode = layer_state_is(_LOWER);
