@@ -132,15 +132,11 @@ static inline void az1uball_i2c_reinit(void) {
 void     pointing_device_driver_init(void)                                    { az1uball_i2c_reinit(); }
 uint16_t pointing_device_driver_get_cpi(void)                                 { return 400; }
 void     pointing_device_driver_set_cpi(uint16_t cpi)                         {}
-report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) { return mouse_report; }
 
-// DIAGNOSTIC: use matrix_scan_user + pointing_device_set_report/send
-// (old QMK API, bypasses pointing_device_task_user which may not be called)
-void matrix_scan_user(void) {
-    report_mouse_t mouse_report = pointing_device_get_report();
+// DIAGNOSTIC: force x=1 to verify pointing_device_driver_get_report is called
+report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     mouse_report.x = 1;
-    pointing_device_set_report(mouse_report);
-    pointing_device_send();
+    return mouse_report;
 }
 
 const key_string_map_t custom_keys_user = {0, 0, ""};
