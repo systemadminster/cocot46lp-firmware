@@ -154,7 +154,7 @@ void pointing_device_task(void) {
     // No re-init, no release — raw read with always-active TWIM
     uint8_t data[9] = {0};
     report_mouse_t rep = pointing_device_get_report();
-    int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, 0x00, data, 9, 100);
+    int8_t result = BMPAPI->i2cm.read_reg(0x7F, 0x00, data, 9, 100);  // invalid addr test
 
     if (result == 0) {
         // data[0] = chip ID (0x49 if pimoroni-compatible)
