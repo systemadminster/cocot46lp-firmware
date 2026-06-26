@@ -131,9 +131,9 @@ static inline void az1uball_i2c_reinit(void) {
 
 void pointing_device_init(void) {
     az1uball_i2c_reinit();
-    // AZ1UBALL initialization: send acceleration mode command (0x91)
-    uint8_t init_data = 0x91;
-    BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &init_data, 1);
+    // AZ1UBALL: send 2-byte acceleration mode command
+    uint8_t init_data[2] = {0x91, 0x00};
+    BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, init_data, 2);
 }
 
 void pointing_device_task(void) {
@@ -150,23 +150,15 @@ void pointing_device_task(void) {
 
     int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, reg, data, 5, 100);
     if (result == 0) {
-        // DIAGNOSTIC: output raw data[0..3] directly to see if any values are non-zero
         // data: [left, right, up, down, switch]
         int8_t dx = (int8_t)data[1] - (int8_t)data[0];
         int8_t dy = (int8_t)data[3] - (int8_t)data[2];
-        if (dx != 0 || dy != 0) {
-            // got real movement data
-            if (layer_state_is(_LOWER)) {
-                rep.h = dx;
-                rep.v = -dy;
-            } else {
-                rep.x = dx;
-                rep.y = dy;
-            }
-        }
+        // DIAGNOSTIC: rep.x shows total motion count+1 so even zero motion drifts cursor
+        // right slowly; actual motion makes it drift faster
+        rep.x = (int8_t)(data[0] + data[1] + data[2] + data[3]) + 1;
         if (data[4] & 0x80) rep.buttons |= MOUSE_BTN1;
     } else {
-        rep.x = 1;  // I2C failed indicator
+        rep.x = 2;  // I2C failed: drifts right at 2/read
     }
 
     pointing_device_set_report(rep);
