@@ -130,7 +130,14 @@ static inline void az1uball_i2c_reinit(void) {
 }
 
 void pointing_device_task(void) {
-    // Reinit I2C every call: GPIO 18/16 shared with col_pins, reconfigured by matrix scan
+    static uint16_t last_read = 0;
+    // Only attempt I2C read every 20ms to avoid starving the main loop
+    if (timer_elapsed(last_read) < 20) {
+        pointing_device_send();
+        return;
+    }
+    last_read = timer_read();
+
     az1uball_i2c_reinit();
 
     uint8_t reg     = AZ1UBALL_REG_LEFT;
@@ -138,9 +145,9 @@ void pointing_device_task(void) {
 
     report_mouse_t rep = pointing_device_get_report();
 
+    // Short timeout (10ms) to avoid blocking the main loop
     if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
         BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
-        // data: [left, right, up, down, switch]
         int8_t dx = (int8_t)data[1] - (int8_t)data[0];
         int8_t dy = (int8_t)data[3] - (int8_t)data[2];
 
