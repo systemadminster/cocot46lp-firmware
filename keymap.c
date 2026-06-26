@@ -140,7 +140,7 @@ static inline void az1uball_i2c_release(void) {
 
 void pointing_device_init(void) {
     az1uball_i2c_init();
-    az1uball_i2c_release();
+    // No release — TWIM holds GPIO 18/16 (phantom keys will appear, this is a diagnostic build)
 }
 
 void pointing_device_task(void) {
@@ -151,19 +151,14 @@ void pointing_device_task(void) {
     }
     last_read = timer_read();
 
-    az1uball_i2c_init();  // claim GPIO 18/16 as I2C
-
+    // No re-init, no release — raw read with always-active TWIM
     uint8_t data[9] = {0};
     report_mouse_t rep = pointing_device_get_report();
-    // Read from reg 0x00: chip_id(0x49?), version, ..., left, right, up, down, switch
     int8_t result = BMPAPI->i2cm.read_reg(AZ1UBALL_ADDR, 0x00, data, 9, 100);
 
-    az1uball_i2c_release();  // release GPIO 18/16 back to matrix
-
     if (result == 0) {
-        // DIAGNOSTIC: rep.x = chip_id (data[0])
-        // If AZ1UBALL responds correctly: data[0]=0x49 → rep.x=0x49=73 (fast right drift)
-        // Motion is in data[4..7]: left, right, up, down
+        // data[0] = chip ID (0x49 if pimoroni-compatible)
+        // data[4..7] = left, right, up, down motion
         rep.x = (int8_t)data[0] + 1;
     } else {
         rep.x = 2;
