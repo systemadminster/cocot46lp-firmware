@@ -129,23 +129,25 @@ static inline void az1uball_i2c_reinit(void) {
     BMPAPI->i2cm.init(&cfg);
 }
 
+void keyboard_post_init_user(void) {
+    // Init I2C once at startup only — do NOT reinit during operation
+    // (GPIO 18/16 are shared with col_pins; reinit during scan causes key ghosting)
+    az1uball_i2c_reinit();
+}
+
 void pointing_device_task(void) {
     static uint16_t last_read = 0;
-    // Only attempt I2C read every 20ms to avoid starving the main loop
     if (timer_elapsed(last_read) < 20) {
         pointing_device_send();
         return;
     }
     last_read = timer_read();
 
-    az1uball_i2c_reinit();
-
     uint8_t reg     = AZ1UBALL_REG_LEFT;
     uint8_t data[5] = {0};
 
     report_mouse_t rep = pointing_device_get_report();
 
-    // Short timeout (10ms) to avoid blocking the main loop
     if (BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, &reg, 1) == 0 &&
         BMPAPI->i2cm.receive(AZ1UBALL_ADDR, data, 5) == 0) {
         int8_t dx = (int8_t)data[1] - (int8_t)data[0];
