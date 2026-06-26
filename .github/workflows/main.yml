@@ -3,22 +3,39 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache QMK BMP clone
+        id: cache-qmk
+        uses: actions/cache@v4
+        with:
+          path: qmk_firmware
+          key: qmk-bmp-v1
+
       - name: Clone BMP QMK
-        run: git clone --depth 1 --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
+        if: steps.cache-qmk.outputs.cache-hit != 'true'
+        run: git clone --depth 1 --single-branch --branch dev/ble_micro_pro https://github.com/sekigon-gonnoc/qmk_firmware.git qmk_firmware
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-gcc-arm-${{ runner.os }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi
+
       - name: Copy keyboard files
         run: |
           mkdir -p qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp
           cp config.h qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
           cp rules.mk qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
           cp keymap.c qmk_firmware/keyboards/ble_micro_pro/keymaps/cocot46lp/
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi
-          printf '#!/bin/bash\ntrue\n' | sudo tee /usr/local/bin/qmk > /dev/null
-          sudo chmod +x /usr/local/bin/qmk
+
       - name: Build firmware
         run: |
           cd qmk_firmware
@@ -32,6 +49,7 @@ jobs:
           make ble_micro_pro:cocot46lp SKIP_GIT=yes
           echo "--- Build output files ---"
           ls -la .build/
+
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
