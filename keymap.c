@@ -57,6 +57,12 @@ static uint32_t cocot46_scan(matrix_row_t *matrix_raw) {
         matrix_raw[r] = (matrix_raw[r] & col_mask) | ((cocot46_r2c_buf[r] & col_mask) << device_cols);
     }
 
+    // Pins 18 (SDA) and 16 (SCL) are shared with col_pins.
+    // Reinitialize I2C after each matrix scan so the AZ1UBALL can be read
+    // in the pointing_device_task that runs between scans.
+    const bmp_api_i2cm_config_t i2c_cfg = {.freq = I2C_FREQ_400K, .scl = CONFIG_PIN_SCL, .sda = CONFIG_PIN_SDA};
+    BMPAPI->i2cm.init(&i2c_cfg);
+
     return change;
 }
 
