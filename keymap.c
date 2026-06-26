@@ -140,8 +140,6 @@ static inline void az1uball_i2c_release(void) {
 
 void pointing_device_init(void) {
     az1uball_i2c_init();
-    uint8_t init_data[2] = {0x91, 0x00};
-    BMPAPI->i2cm.transmit(AZ1UBALL_ADDR, init_data, 2);
     az1uball_i2c_release();
 }
 
